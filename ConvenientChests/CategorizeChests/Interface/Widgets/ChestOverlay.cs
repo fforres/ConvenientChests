@@ -9,120 +9,147 @@ using StardewValley.Objects;
 
 namespace ConvenientChests.CategorizeChests.Interface.Widgets {
     internal class ChestOverlay : Widget {
-        private ItemGrabMenu           ItemGrabMenu   { get; }
-        private CategorizeChestsModule Module         { get; }
-        private Chest                  Chest          { get; }
-        private ITooltipManager        TooltipManager { get; }
 
-        private readonly InventoryMenu                   InventoryMenu;
-        private readonly InventoryMenu.highlightThisItem DefaultChestHighlighter;
-        private readonly InventoryMenu.highlightThisItem DefaultInventoryHighlighter;
+        private readonly InventoryMenu inventoryMenu;
 
-        private TextButton   OpenButton   { get; set; }
-        private TextButton   StashButton  { get; set; }
-        private CategoryMenu CategoryMenu { get; set; }
+        private readonly InventoryMenu.highlightThisItem defaultChestHighlighter;
 
+        private readonly InventoryMenu.highlightThisItem defaultInventoryHighlighter;
+
+        private TextButton OpenButton {
+            get; set;
+        }
+
+        private TextButton StashButton {
+            get; set;
+        }
+
+        private CategoryMenu CategoryMenu {
+            get; set;
+        }
+
+        private ItemGrabMenu ItemGrabMenu {
+            get;
+        }
+
+        private CategorizeChestsModule Module {
+            get;
+        }
+
+        private Chest Chest {
+            get;
+        }
+
+        private ITooltipManager TooltipManager {
+            get;
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.OrderingRules", "SA1201:Elements should appear in the correct order", Justification = "Revised")]
         public ChestOverlay(CategorizeChestsModule module, Chest chest, ItemGrabMenu menu, ITooltipManager tooltipManager) {
-            Module         = module;
-            Chest          = chest;
-            ItemGrabMenu   = menu;
-            InventoryMenu  = menu.ItemsToGrabMenu;
-            TooltipManager = tooltipManager;
+            this.Module = module;
+            this.Chest = chest;
+            this.ItemGrabMenu = menu;
+            this.inventoryMenu = menu.ItemsToGrabMenu;
+            this.TooltipManager = tooltipManager;
 
-            DefaultChestHighlighter     = ItemGrabMenu.inventory.highlightMethod;
-            DefaultInventoryHighlighter = InventoryMenu.highlightMethod;
+            this.defaultChestHighlighter = this.ItemGrabMenu.inventory.highlightMethod;
+            this.defaultInventoryHighlighter = this.inventoryMenu.highlightMethod;
 
-            AddButtons();
+            this.AddButtons();
+        }
+
+        public override bool ReceiveLeftClick(Point point) {
+            var hit = this.PropagateLeftClick(point);
+            if (!hit && this.CategoryMenu != null) {
+                // Are they clicking outside the menu to try to exit it?
+                this.CloseCategoryMenu();
+            }
+
+            return hit;
         }
 
         protected override void OnParent(Widget parent) {
             base.OnParent(parent);
 
-            if (parent == null) return;
-            Width  = parent.Width;
-            Height = parent.Height;
+            if (parent == null) {
+                return;
+            }
+
+            this.Width = parent.Width;
+            this.Height = parent.Height;
         }
 
         private void AddButtons() {
-            OpenButton         =  new TextButton("Categorize", Sprites.LeftProtrudingTab);
-            OpenButton.OnPress += ToggleMenu;
-            AddChild(OpenButton);
+            this.OpenButton = new TextButton("Categorize", Sprites.LeftProtrudingTab);
+            this.OpenButton.OnPress += this.ToggleMenu;
+            this.AddChild(this.OpenButton);
 
-            StashButton         =  new TextButton(ChooseStashButtonLabel(), Sprites.LeftProtrudingTab);
-            StashButton.OnPress += StashItems;
-            AddChild(StashButton);
+            this.StashButton = new TextButton(this.ChooseStashButtonLabel(), Sprites.LeftProtrudingTab);
+            this.StashButton.OnPress += this.StashItems;
+            this.AddChild(this.StashButton);
 
-            PositionButtons();
+            this.PositionButtons();
         }
 
         private void PositionButtons() {
-            StashButton.Width = OpenButton.Width = Math.Max(StashButton.Width, OpenButton.Width);
+            this.StashButton.Width = this.OpenButton.Width = Math.Max(this.StashButton.Width, this.OpenButton.Width);
 
-            OpenButton.Position = new Point(
-                    ItemGrabMenu.xPositionOnScreen + ItemGrabMenu.width / 2 - OpenButton.Width - 112 * Game1.pixelZoom,
-                    ItemGrabMenu.yPositionOnScreen                                             + 22  * Game1.pixelZoom
-                );
+            this.OpenButton.Position = new Point(
+                this.ItemGrabMenu.xPositionOnScreen + (this.ItemGrabMenu.width / 2) - this.OpenButton.Width - (112 * Game1.pixelZoom),
+                this.ItemGrabMenu.yPositionOnScreen + (22 * Game1.pixelZoom)
+            );
 
-            StashButton.Position = new Point(
-                    OpenButton.Position.X + OpenButton.Width  - StashButton.Width,
-                    OpenButton.Position.Y + OpenButton.Height - 0
-                );
+            this.StashButton.Position = new Point(
+                this.OpenButton.Position.X + this.OpenButton.Width - this.StashButton.Width,
+                this.OpenButton.Position.Y + this.OpenButton.Height - 0
+            );
         }
 
         private string ChooseStashButtonLabel() {
-            return Module.Config.StashKey == SButton.None
+            return this.Module.Config.StashKey == SButton.None
                        ? "Stash"
-                       : $"Stash ({Module.Config.StashKey})";
+                       : $"Stash ({this.Module.Config.StashKey})";
         }
 
         private void ToggleMenu() {
-            if (CategoryMenu == null)
-                OpenCategoryMenu();
-
-            else
-                CloseCategoryMenu();
+            if (this.CategoryMenu == null) {
+                this.OpenCategoryMenu();
+            } else {
+                this.CloseCategoryMenu();
+            }
         }
 
         private void OpenCategoryMenu() {
-            var chestData = Module.ChestDataManager.GetChestData(Chest);
-            CategoryMenu = new CategoryMenu(chestData, Module.ItemDataManager, TooltipManager, ItemGrabMenu.width - 24);
-            CategoryMenu.Position = new Point(
-                    ItemGrabMenu.xPositionOnScreen - GlobalBounds.X - 12,
-                    ItemGrabMenu.yPositionOnScreen - GlobalBounds.Y - 60
+            var chestData = this.Module.ChestDataManager.GetChestData(this.Chest);
+            this.CategoryMenu = new CategoryMenu(chestData, this.Module.ItemDataManager, this.TooltipManager, this.ItemGrabMenu.width - 24);
+            this.CategoryMenu.Position = new Point(
+                    this.ItemGrabMenu.xPositionOnScreen - this.GlobalBounds.X - 12,
+                    this.ItemGrabMenu.yPositionOnScreen - this.GlobalBounds.Y - 60
                 );
 
-            CategoryMenu.OnClose += CloseCategoryMenu;
-            AddChild(CategoryMenu);
+            this.CategoryMenu.OnClose += this.CloseCategoryMenu;
+            this.AddChild(this.CategoryMenu);
 
-            SetItemsClickable(false);
+            this.SetItemsClickable(false);
         }
 
         private void CloseCategoryMenu() {
-            RemoveChild(CategoryMenu);
-            CategoryMenu = null;
+            this.RemoveChild(this.CategoryMenu);
+            this.CategoryMenu = null;
 
-            SetItemsClickable(true);
+            this.SetItemsClickable(true);
         }
 
-        private void StashItems() => StackLogic.StashToChest(Chest, ModEntry.StashNearby.AcceptingFunction);
-
-        public override bool ReceiveLeftClick(Point point) {
-            var hit = PropagateLeftClick(point);
-            if (!hit && CategoryMenu != null)
-                // Are they clicking outside the menu to try to exit it?
-                CloseCategoryMenu();
-
-            return hit;
-        }
+        private void StashItems() => StackLogic.StashToChest(this.Chest, ModEntry.StashNearby.AcceptingFunction);
 
         private void SetItemsClickable(bool clickable) {
             if (clickable) {
-                ItemGrabMenu.inventory.highlightMethod = DefaultChestHighlighter;
-                InventoryMenu.highlightMethod          = DefaultInventoryHighlighter;
+                this.ItemGrabMenu.inventory.highlightMethod = this.defaultChestHighlighter;
+                this.inventoryMenu.highlightMethod = this.defaultInventoryHighlighter;
             }
             else {
-                ItemGrabMenu.inventory.highlightMethod = i => false;
-                InventoryMenu.highlightMethod          = i => false;
+                this.ItemGrabMenu.inventory.highlightMethod = i => false;
+                this.inventoryMenu.highlightMethod = i => false;
             }
         }
     }

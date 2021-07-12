@@ -14,53 +14,60 @@ namespace ConvenientChests.CategorizeChests.Interface.Widgets
     /// </summary>
     public class Widget : IDisposable
     {
-        Widget _Parent;
-        public Widget Parent
-        {
-            get => _Parent;
+        private Widget privateParent;
+
+        private int privateWidth;
+
+        private int privateHeight;
+
+        private List<Widget> childrenList = new List<Widget>();
+
+        public Widget Parent {
+            get => this.privateParent;
             set
             {
-                _Parent = value;
-                OnParent(value);
+                this.privateParent = value;
+                this.OnParent(value);
             }
         }
 
-        List<Widget> _Children = new List<Widget>();
-        public IEnumerable<Widget> Children => _Children;
+
+        public IEnumerable<Widget> Children => this.childrenList;
 
         public Point Position { get; set; }
 
-        public int X
-        {
-            get => Position.X;
-            set { Position = new Point(value, Position.Y); }
-        }
-
-        public int Y
-        {
-            get => Position.Y;
-            set { Position = new Point(Position.X, value); }
-        }
-
-        int _Width;
-        public int Width
-        {
-            get => _Width;
-            set
-            {
-                _Width = value;
-                OnDimensionsChanged();
+        public int X {
+            get => this.Position.X;
+            set {
+                this.Position = new Point(value, this.Position.Y);
             }
         }
 
-        int _Height;
-        public int Height
+        public int Y {
+            get => this.Position.Y;
+            set {
+                this.Position = new Point(this.Position.X, value);
+            }
+        }
+
+
+        public int Width
         {
-            get { return _Height; }
+            get => this.privateWidth;
             set
             {
-                _Height = value;
-                OnDimensionsChanged();
+                this.privateWidth = value;
+                this.OnDimensionsChanged();
+            }
+        }
+
+        public int Height
+        {
+            get { return this.privateHeight; }
+            set
+            {
+                this.privateHeight = value;
+                this.OnDimensionsChanged();
             }
         }
 
@@ -183,7 +190,7 @@ namespace ConvenientChests.CategorizeChests.Interface.Widgets
         public T AddChild<T>(T child) where T : Widget
         {
             child.Parent = this;
-            _Children.Add(child);
+            this.childrenList.Add(child);
 
             OnContentsChanged();
 
@@ -192,7 +199,7 @@ namespace ConvenientChests.CategorizeChests.Interface.Widgets
 
         public void RemoveChild(Widget child)
         {
-            _Children.Remove(child);
+            this.childrenList.Remove(child);
             child.Parent = null;
 
             OnContentsChanged();
@@ -210,7 +217,7 @@ namespace ConvenientChests.CategorizeChests.Interface.Widgets
                 child.Parent = null;
             }
 
-            _Children.RemoveAll(shouldRemove);
+            this.childrenList.RemoveAll(shouldRemove);
 
             OnContentsChanged();
         }
